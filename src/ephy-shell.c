@@ -50,6 +50,7 @@
 
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
+#include <granite.h>
 #include <handy.h>
 
 struct _EphyShell {
@@ -484,16 +485,37 @@ run_in_background_set_mapping (const GValue       *value,
 }
 
 static void
+ephy_shell_set_prefers_color_scheme (EphyShell *shell)
+{
+    GtkSettings* gtk_settings = gtk_settings_get_default ();
+    GraniteSettings* granite_settings = granite_settings_get_default ();
+
+    g_object_set (
+        gtk_settings,
+        "gtk-application-prefer-dark-theme",
+        granite_settings_get_prefers_color_scheme (granite_settings) == GRANITE_SETTINGS_COLOR_SCHEME_DARK,
+        NULL
+    );
+}
+
+static void
 ephy_shell_startup (GApplication *application)
 {
   EphyEmbedShell *embed_shell = EPHY_EMBED_SHELL (application);
   EphyShell *shell = EPHY_SHELL (application);
   EphyEmbedShellMode mode;
   GAction *action;
+  GraniteSettings* granite_settings = granite_settings_get_default ();
 
   G_APPLICATION_CLASS (ephy_shell_parent_class)->startup (application);
 
   hdy_init ();
+
+  ephy_shell_set_prefers_color_scheme (shell);
+
+  g_signal_connect (granite_settings, "notify::prefers-color-scheme",
+    G_CALLBACK (ephy_shell_set_prefers_color_scheme), shell
+  );
 
   /* If we are under Pantheon set the icon-theme and cursor-theme accordingly. */
   if (is_desktop_pantheon ()) {

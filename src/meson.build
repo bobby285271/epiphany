@@ -74,6 +74,7 @@ libephymain_deps = [
   gdk_dep,
   gvdb_dep,
   libarchive_dep,
+  libgranite_dep,
   libhandy_dep
 ]
 
